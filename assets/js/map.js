@@ -147,13 +147,29 @@ info.update = function (props)
     else
       colorPos = yellow;
 
-      var pos = -1 + (current_provinsi.positif/100000);
+      var pos = -1 + (current_provinsi.positif/70000);
     if(pos < -0.7)
       colorPos = green;
     else if(pos > -0.1)
       colorPos = red;
     else
       colorPos = yellow;
+
+    var sem = -1 + (current_provinsi.sembuh/60000);
+      if(sem < -0.7)
+        colorSem = green;
+      else if(pos > -0.1)
+        colorSem = red;
+      else
+        colorSem = yellow;
+    
+    var men = -1 + (current_provinsi.meninggal/5000);
+      if(men < -0.7)
+        colorMen = red;
+      else if(pos > -0.1)
+        colorMen = green;
+      else
+        colorMen = yellow;
 
     vertices = [
 
@@ -164,19 +180,19 @@ info.update = function (props)
       -0.6, -1, colorPos[0],colorPos[1],colorPos[2],      // Titik C
       -1, -1, colorPos[0],colorPos[1],colorPos[2],      // Titik D
 
-      -0.2, -1 + (current_provinsi.sembuh/100000), 0.0, 1.0, 0.0,      // Titik A
-      0.2, -1 + (current_provinsi.sembuh/100000), 0.0, 1.0, 0.0,       // Titik B
-      0.2, -1.0, 0.0, 1.0, 0.0,      // Titik C
-      -0.2, -1 + (current_provinsi.sembuh/100000), 0.0, 1.0, 0.0,      // Titik A
-      0.2, -1, 0.0, 1.0, 0.0,      // Titik C
-      -0.2, -1, 0.0, 1.0, 0.0,      // Titik D
+      -0.2, sem, colorSem[0],colorSem[1],colorSem[2],      // Titik A
+      0.2, sem, colorSem[0],colorSem[1],colorSem[2],       // Titik B
+      0.2, -1, colorSem[0],colorSem[1],colorSem[2],      // Titik C
+      -0.2, sem, colorSem[0],colorSem[1],colorSem[2],      // Titik A
+      0.2, -1, colorSem[0],colorSem[1],colorSem[2],      // Titik C
+      -0.2, -1, colorSem[0],colorSem[1],colorSem[2],      // Titik D
 
-      0.6, -1 + (current_provinsi.meninggal/100000), 0.0, 1.0, 0.0,      // Titik A
-      1, -1 + (current_provinsi.meninggal/100000), 0.0, 1.0, 0.0,       // Titik B
-      1, -1.0, 0.0, 1.0, 0.0,      // Titik C
-      0.6, -1 + (current_provinsi.meninggal/100000), 0.0, 1.0, 0.0,      // Titik A
-      1, -1, 0.0, 1.0, 0.0,      // Titik C
-      0.6, -1, 0.0, 1.0, 0.0,      // Titik D
+      0.6, men, colorMen[0],colorMen[1],colorMen[2],      // Titik A
+      1, men, colorMen[0],colorMen[1],colorMen[2],       // Titik B
+      1, -1.0, colorMen[0],colorMen[1],colorMen[2],      // Titik C
+      0.6, men, colorMen[0],colorMen[1],colorMen[2],      // Titik A
+      1, -1, colorMen[0],colorMen[1],colorMen[2],      // Titik C
+      0.6, -1, colorMen[0],colorMen[1],colorMen[2],      // Titik D
 
     ];
     main(vertices);
