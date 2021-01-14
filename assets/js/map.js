@@ -1,3 +1,108 @@
+function main(vertices) {
+  var canvas = document.getElementById("myCanvas");
+  var gl = canvas.getContext("webgl");
+  canvas.height = window.innerHeight;
+  
+  gl.viewport(canvas.width/5, -100, canvas.width/2, canvas.height - 100)
+
+    var vertexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  
+    // Ibaratnya di bawah ini adalah .c
+    var vertexShaderSource = `
+      attribute vec2 a_Position;
+      attribute vec3 a_Color;
+      varying vec3 v_Color;
+      uniform vec2 d;
+      void main() {
+        mat4 translasi = mat4(
+          1.0, 0.0, 0.0, 0.0,
+          0.0, 1.0, 0.0, 0.0,
+          0.0, 0.0, 1.0, 0.0,
+          d, 0.0, 1.0
+        );
+        gl_Position = translasi * vec4(a_Position, 0.0, 1.0);
+        v_Color = a_Color;
+      }
+    `;
+    var fragmentShaderSource = `
+      precision mediump float;
+      varying vec3 v_Color;
+      void main() {
+        gl_FragColor = vec4(v_Color, 1.0);
+      }
+    `;
+  
+    // Ibaratnya di bawah ini adalah .o
+    var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+  
+    // Ibarat mengetikkan teks source code ke dalam penampung .c
+    gl.shaderSource(vertexShader, vertexShaderSource);
+    gl.shaderSource(fragmentShader, fragmentShaderSource);
+  
+    // Ibarat mengompilasi .c menjadi .o
+    gl.compileShader(vertexShader);
+    gl.compileShader(fragmentShader);
+  
+    // Ibarat membuatkan penampung .exe
+    var shaderProgram = gl.createProgram();
+  
+    // Ibarat memasukkan "adonan" .o ke dalam penampung .exe
+    gl.attachShader(shaderProgram, vertexShader);
+    gl.attachShader(shaderProgram, fragmentShader);
+  
+    // Ibarat menggabung-gabungkan "adonan" yang ada di dalam penampung .exe
+    gl.linkProgram(shaderProgram);
+  
+    // Ibarat memulai menggunakan "cat" .exe ke dalam konteks grafika (penggambaran)
+    gl.useProgram(shaderProgram);
+  
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    var aPosition = gl.getAttribLocation(shaderProgram, "a_Position");
+    var aColor = gl.getAttribLocation(shaderProgram, "a_Color");
+    gl.vertexAttribPointer(
+      aPosition, 
+      2, 
+      gl.FLOAT, 
+      false, 
+      5 * Float32Array.BYTES_PER_ELEMENT, 
+      0);
+    gl.vertexAttribPointer(
+      aColor, 
+      3, 
+      gl.FLOAT, 
+      false, 
+      5 * Float32Array.BYTES_PER_ELEMENT, 
+      2 * Float32Array.BYTES_PER_ELEMENT);
+    gl.enableVertexAttribArray(aPosition);
+    gl.enableVertexAttribArray(aColor);
+  
+  
+    var d = [0, 1.0];
+    var uD = gl.getUniformLocation(shaderProgram, 'd');
+  
+    var primitive = gl.TRIANGLES;
+    var offset = 0;
+    var nVertex = 6;
+  
+    gl.uniform2fv(uD, d);
+      gl.clearColor(1, 1, 1, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(primitive, 0, nVertex);
+      gl.drawArrays(primitive, 6, nVertex);
+      gl.drawArrays(primitive, 12, nVertex);
+};
+
+function clear(){
+  var canvas = document.getElementById("myCanvas");
+  var gl = canvas.getContext("webgl");
+  gl.clearColor(1, 1, 1, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+};
+
 var map = L.map('map').setView({lon: 117.9213, lat: -1.7893}, 5);
 
 L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
@@ -20,15 +125,63 @@ info.onAdd = function (map)
   return this._div;
 };
 
+var red = [0.863, 0.078, 0.235];
+var yellow = [1, 0.647, 0];
+var green = [0 , 0.8, 0];
+
 info.update = function (props) 
 {
-  this._div.innerHTML = '<h4>Persebaran COVID-19</h4>Arahkan kursor ke Suatu Provinsi';
+  this._div.innerHTML = '<h4>Kasus COVID-19</h4>Arahkan kursor ke Suatu Provinsi';
+
+  clear();
 
   if (props)
   {
     var current_provinsi = provinsi[`${props.Propinsi}`];
     
-    this._div.innerHTML = '<h4>Persebaran COVID-19</h4>' + (props ? '<b>' + props.Propinsi + '</b><br />' : 'Arahkan ke Suatu Provinsi') + 
+    var pos = -1 + (current_provinsi.positif/100000);
+    if(pos < -0.7)
+      colorPos = green;
+    else if(pos > -0.1)
+      colorPos = red;
+    else
+      colorPos = yellow;
+
+      var pos = -1 + (current_provinsi.positif/100000);
+    if(pos < -0.7)
+      colorPos = green;
+    else if(pos > -0.1)
+      colorPos = red;
+    else
+      colorPos = yellow;
+
+    vertices = [
+
+      -0.6, pos, colorPos[0],colorPos[1],colorPos[2],      // Titik A
+      -1, pos, colorPos[0],colorPos[1],colorPos[2],       // Titik B
+      -0.6, -1, colorPos[0],colorPos[1],colorPos[2],      // Titik C
+      -1, pos, colorPos[0],colorPos[1],colorPos[2],      // Titik A
+      -0.6, -1, colorPos[0],colorPos[1],colorPos[2],      // Titik C
+      -1, -1, colorPos[0],colorPos[1],colorPos[2],      // Titik D
+
+      -0.2, -1 + (current_provinsi.sembuh/100000), 0.0, 1.0, 0.0,      // Titik A
+      0.2, -1 + (current_provinsi.sembuh/100000), 0.0, 1.0, 0.0,       // Titik B
+      0.2, -1.0, 0.0, 1.0, 0.0,      // Titik C
+      -0.2, -1 + (current_provinsi.sembuh/100000), 0.0, 1.0, 0.0,      // Titik A
+      0.2, -1, 0.0, 1.0, 0.0,      // Titik C
+      -0.2, -1, 0.0, 1.0, 0.0,      // Titik D
+
+      0.6, -1 + (current_provinsi.meninggal/100000), 0.0, 1.0, 0.0,      // Titik A
+      1, -1 + (current_provinsi.meninggal/100000), 0.0, 1.0, 0.0,       // Titik B
+      1, -1.0, 0.0, 1.0, 0.0,      // Titik C
+      0.6, -1 + (current_provinsi.meninggal/100000), 0.0, 1.0, 0.0,      // Titik A
+      1, -1, 0.0, 1.0, 0.0,      // Titik C
+      0.6, -1, 0.0, 1.0, 0.0,      // Titik D
+
+    ];
+    main(vertices);
+    
+    this._div.innerHTML = '<h4>Kasus COVID-19</h4>' + (props ? '<b>' + props.Propinsi + '</b><br />' : 'Arahkan ke Suatu Provinsi') + 
       (current_provinsi ?
       'Jumlah Positif : ' + current_provinsi.positif + ' orang<br />' +
       'Jumlah Sembuh : ' + current_provinsi.sembuh + ' orang<br />' +
@@ -38,6 +191,14 @@ info.update = function (props)
 };
 
 info.addTo(map);
+
+function newFunction() {
+  clear(); {
+    var gl = canvas.getContext("webgl");
+    gl.clearColor(1, 1, 1, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  };
+}
 
 function categorycolor(f)
 {
@@ -147,7 +308,7 @@ $.getJSON('https://indonesia-covid-19.mathdro.id/api/provinsi', function(data)
   geojsonLayer.addTo(map);
 });
 
-var legend = L.control({position: 'bottomright'});
+var legend = L.control({position: 'bottomleft'});
 
 legend.onAdd = function (map) 
 {
